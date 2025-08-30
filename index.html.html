@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Penjualan Harian</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --secondary: #2c3e50;
+            --accent: #f7c59f;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary) !important;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 40px;
+            margin-right: 10px;
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: none;
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            background: linear-gradient(135deg, var(--primary) 0%, #e84a2d 100%);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #e84a2d 100%);
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #e84a2d 0%, var(--primary) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25);
+        }
+        
+        .dashboard-card {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .dashboard-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .dashboard-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 0;
+            color: var(--secondary);
+        }
+        
+        .dashboard-card p {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .product-input {
+            border-left: 4px solid var(--primary);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: none;
+        }
+        
+        .report-table {
+            font-size: 0.9rem;
+        }
+        
+        .report-table th {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .period-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .period-btn {
+            margin: 0 5px;
+        }
+        
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        
+        .summary-card h4 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .summary-card p {
+            color: #6c757d;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="40">
+                    <circle cx="50" cy="50" r="45" fill="#ff6b35"/>
+                    <path d="M30,40 Q50,25 70,40 Q60,60 50,65 Q40,60 30,40" fill="#f7c59f"/>
+                    <path d="M40,35 Q50,30 60,35 Q55,40 50,42 Q45,40 40,35" fill="#2c3e50"/>
+                </svg>
+                Dsist Fried Chicken
+            </a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Form Laporan Harian</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="salesForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="tanggal" class="form-label">Tanggal</label>
+                                    <input type="date" class="form-control" id="tanggal" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="namaKaryawan" class="form-label">Nama Karyawan</label>
+                                    <select class="form-select" id="namaKaryawan" required>
+                                        <option value="" selected disabled>Pilih Karyawan</option>
+                                        <option value="Agus">Agus</option>
+                                        <option value="Ayu">Ayu</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <h6 class="mt-4 mb-3 text-primary"><i class="fas fa-utensils me-2"></i>Produk yang Terjual</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3 product-input">
+                                    <label for="ayam" class="form-label">Ayam</label>
+                                    <input type="number" class="form-control" id="ayam" min="0" value="0" required>
+                                </div>
+                                <div class="col-md-6 mb-3 product-input">
+                                    <label for="nasi" class="form-label">Nasi</label>
+                                    <input type="number" class="form-control" id="nasi" min="0" value="0" required>
+                                </div>
+                                <div class="col-md-6 mb-3 product-input">
+                                    <label for="kulit" class="form-label">Kulit</label>
+                                    <input type="number" class="form-control" id="kulit" min="0" value="0" required>
+                                </div>
+                                <div class="col-md-6 mb-3 product-input">
+                                    <label for="geprek" class="form-label">Geprek</label>
+                                    <input type="number" class="form-control" id="geprek" min="0" value="0" required>
+                                </div>
+                                <div class="col-md-6 mb-3 product-input">
+                                    <label for="saosBBQ" class="form-label">Saos BBQ</label>
+                                    <input type="number" class="form-control" id="saosBBQ" min="0" value="0" required>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i>Simpan Laporan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Statistik Penjualan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="filter-section">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="filterBulan" class="form-label">Filter Bulan</label>
+                                    <select class="form-select" id="filterBulan">
+                                        <option value="all">Semua Bulan</option>
+                                        <option value="0">Januari</option>
+                                        <option value="1">Februari</option>
+                                        <option value="2">Maret</option>
+                                        <option value="3">April</option>
+                                        <option value="4">Mei</option>
+                                        <option value="5">Juni</option>
+                                        <option value="6">Juli</option>
+                                        <option value="7">Agustus</option>
+                                        <option value="8">September</option>
+                                        <option value="9">Oktober</option>
+                                        <option value="10">November</option>
+                                        <option value="11">Desember</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="filterTahun" class="form-label">Filter Tahun</label>
+                                    <select class="form-select" id="filterTahun">
+                                        <option value="2023">2023</option>
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3 d-flex align-items-end">
+                                    <button class="btn btn-primary w-100" id="applyFilter">
+                                        <i class="fas fa-filter me-2"></i>Terapkan Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <i class="fas fa-calendar-day"></i>
+                                    <h3 id="harian">0</h3>
+                                    <p>Hari Ini</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <i class="fas fa-calendar-week"></i>
+                                    <h3 id="mingguan">0</h3>
+                                    <p>Minggu Ini</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <h3 id="bulanan">0</h3>
+                                    <p>Bulan Ini</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <i class="fas fa-drumstick-bite"></i>
+                                    <h3 id="totalAyam">0</h3>
+                                    <p>Total Ayam</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <i class="fas fa-utensils"></i>
+                                    <h3 id="totalNasi">0</h3>
+                                    <p>Total Nasi</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="dashboard-card">
+                                    <i class="fas fa-fire"></i>
+                                    <h3 id="totalGeprek">0</h3>
+                                    <p>Total Geprek</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Grafik Penjualan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="period-selector">
+                            <button class="btn btn-outline-primary period-btn active" data-period="daily">Harian</button>
+                            <button class="btn btn-outline-primary period-btn" data-period="weekly">Mingguan</button>
+                            <button class="btn btn-outline-primary period-btn" data-period="monthly">Bulanan</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-table me-2"></i>Laporan Harian</h5>
+                        <div>
+                            <span class="badge bg-primary" id="reportRange">Semua Data</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Karyawan</th>
+                                        <th>Ayam</th>
+                                        <th>Nasi</th>
+                                        <th>Kulit</th>
+                                        <th>Geprek</th>
+                                        <th>Saos BBQ</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dailyReport">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-table me-2"></i>Laporan Mingguan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Minggu</th>
+                                        <th>Ayam</th>
+                                        <th>Nasi</th>
+                                        <th>Kulit</th>
+                                        <th>Geprek</th>
+                                        <th>Saos BBQ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="weeklyReport">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-table me-2"></i>Laporan Bulanan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Bulan</th>
+                                        <th>Ayam</th>
+                                        <th>Nasi</th>
+                                        <th>Kulit</th>
+                                        <th>Geprek</th>
+                                        <th>Saos BBQ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="monthlyReport">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification alert alert-success alert-dismissible fade show" role="alert">
+        <span id="notificationText"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Data contoh untuk simulasi
+        const sampleData = {
+            daily: [
+                { tanggal: '2023-10-01', karyawan: 'Agus', ayam: 25, nasi: 30, kulit: 15, geprek: 20, saosBBQ: 10 },
+                { tanggal: '2023-10-01', karyawan: 'Ayu', ayam: 20, nasi: 25, kulit: 10, geprek: 15, saosBBQ: 8 },
+                { tanggal: '2023-10-02', karyawan: 'Agus', ayam: 30, nasi: 35, kulit: 20, geprek: 25, saosBBQ: 15 },
+                { tanggal: '2023-10-02', karyawan: 'Ayu', ayam: 22, nasi: 28, kulit: 12, geprek: 18, saosBBQ: 9 },
+                { tanggal: '2023-11-05', karyawan: 'Agus', ayam: 28, nasi: 32, kulit: 18, geprek: 22, saosBBQ: 12 },
+                { tanggal: '2023-11-05', karyawan: 'Ayu', ayam: 24, nasi: 26, kulit: 14, geprek: 16, saosBBQ: 10 }
+            ],
+            weekly: [
+                { minggu: 'Minggu 1 Okt', ayam: 150, nasi: 180, kulit: 90, geprek: 120, saosBBQ: 60 },
+                { minggu: 'Minggu 2 Okt', ayam: 160, nasi: 190, kulit: 100, geprek: 130, saosBBQ: 70 },
+                { minggu: 'Minggu 3 Okt', ayam: 170, nasi: 200, kulit: 110, geprek: 140, saosBBQ: 80 },
+                { minggu: 'Minggu 1 Nov', ayam: 165, nasi: 185, kulit: 95, geprek: 125, saosBBQ: 65 }
+            ],
+            monthly: [
+                { bulan: 'Oktober 2023', ayam: 600, nasi: 720, kulit: 360, geprek: 480, saosBBQ: 240 },
+                { bulan: 'November 2023', ayam: 620, nasi: 740, kulit: 380, geprek: 500, saosBBQ: 260 },
+                { bulan: 'Desember 2023', ayam: 640, nasi: 760, kulit: 400, geprek: 520, saosBBQ: 280 }
+            ]
+        };
+
+        // Ganti URL dengan URL Web App Anda dari Google Apps Script
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxrwi8de8FaZqDPGtJtafZfxGlTnye_ZTzAkgmac3zXCA6cU9L_435vpdCnGNzUQyA/exec';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set tanggal hari ini sebagai default
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('tanggal').value = todayStr;
+            
+            // Set tahun default di filter
+            document.getElementById('filterTahun').value = yyyy;
+            
+            const form = document.getElementById('salesForm');
+            
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                
+                // Tampilkan loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+                submitBtn.disabled = true;
+                
+                // Kumpulkan data
+                const data = {
+                    tanggal: document.getElementById('tanggal').value,
+                    namaKaryawan: document.getElementById('namaKaryawan').value,
+                    ayam: document.getElementById('ayam').value,
+                    nasi: document.getElementById('nasi').value,
+                    kulit: document.getElementById('kulit').value,
+                    geprek: document.getElementById('geprek').value,
+                    saosBBQ: document.getElementById('saosBBQ').value
+                };
+                
+                // Kirim data ke Google Sheets
+                fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(() => {
+                    showNotification('Laporan berhasil disimpan!');
+                    form.reset();
+                    document.getElementById('tanggal').value = todayStr;
+                    
+                    // Update statistik dan laporan
+                    updateStats();
+                    populateReports();
+                })
+                .catch(error => {
+                    showNotification('Error: ' + error.message, 'danger');
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+            });
+            
+            // Event listener untuk tombol filter
+            document.getElementById('applyFilter').addEventListener('click', function() {
+                applyFilter();
+            });
+            
+            // Event listener untuk tombol periode grafik
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    initChart(this.dataset.period);
+                });
+            });
+            
+            // Inisialisasi statistik dan laporan
+            updateStats();
+            populateReports();
+            initChart('daily');
+        });
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.querySelector('.notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.classList.remove('alert-success', 'alert-danger');
+            notification.classList.add(type === 'success' ? 'alert-success' : 'alert-danger');
+            notification.style.display = 'block';
+            
+            // Sembunyikan notifikasi setelah 5 detik
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+        
+        function updateStats() {
+            // Dalam implementasi nyata, ini akan mengambil data dari Google Sheets
+            // Untuk demo, kita gunakan angka acak
+            document.getElementById('harian').textContent = Math.floor(Math.random() * 50) + 20;
+            document.getElementById('mingguan').textContent = Math.floor(Math.random() * 300) + 100;
+            document.getElementById('bulanan').textContent = Math.floor(Math.random() * 1200) + 500;
+            document.getElementById('totalAyam').textContent = Math.floor(Math.random() * 5000) + 2000;
+            document.getElementById('totalNasi').textContent = Math.floor(Math.random() * 4000) + 1500;
+            document.getElementById('totalGeprek').textContent = Math.floor(Math.random() * 2000) + 800;
+        }
+        
+        function applyFilter() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+            
+            // Dalam implementasi nyata, ini akan memfilter data dari Google Sheets
+            // Untuk demo, kita hanya menampilkan pesan
+            let rangeText = "Semua Data";
+            if (bulan !== 'all') {
+                const namaBulan = document.getElementById('filterBulan').options[document.getElementById('filterBulan').selectedIndex].text;
+                rangeText = `${namaBulan} ${tahun}`;
+            } else if (tahun !== 'all') {
+                rangeText = `Tahun ${tahun}`;
+            }
+            
+            document.getElementById('reportRange').textContent = rangeText;
+            showNotification(`Filter diterapkan: ${rangeText}`);
+            
+            // Di sini Anda akan memfilter data yang ditampilkan berdasarkan bulan dan tahun
+            // Untuk saat ini, kita hanya mengupdate teks range
+        }
+        
+        function populateReports() {
+            // Isi laporan harian
+            const dailyReport = document.getElementById('dailyReport');
+            dailyReport.innerHTML = '';
+            
+            sampleData.daily.forEach(item => {
+                const total = item.ayam + item.nasi + item.kulit + item.geprek + item.saosBBQ;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.tanggal}</td>
+                    <td>${item.karyawan}</td>
+                    <td>${item.ayam}</td>
+                    <td>${item.nasi}</td>
+                    <td>${item.kulit}</td>
+                    <td>${item.geprek}</td>
+                    <td>${item.saosBBQ}</td>
+                    <td><strong>${total}</strong></td>
+                `;
+                dailyReport.appendChild(row);
+            });
+            
+            // Isi laporan mingguan
+            const weeklyReport = document.getElementById('weeklyReport');
+            weeklyReport.innerHTML = '';
+            
+            sampleData.weekly.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.minggu}</td>
+                    <td>${item.ayam}</td>
+                    <td>${item.nasi}</td>
+                    <td>${item.kulit}</td>
+                    <td>${item.geprek}</td>
+                    <td>${item.saosBBQ}</td>
+                `;
+                weeklyReport.appendChild(row);
+            });
+            
+            // Isi laporan bulanan
+            const monthlyReport = document.getElementById('monthlyReport');
+            monthlyReport.innerHTML = '';
+            
+            sampleData.monthly.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.bulan}</td>
+                    <td>${item.ayam}</td>
+                    <td>${item.nasi}</td>
+                    <td>${item.kulit}</td>
+                    <td>${item.geprek}</td>
+                    <td>${item.saosBBQ}</td>
+                `;
+                monthlyReport.appendChild(row);
+            });
+        }
+        
+        function initChart(period) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            // Hancurkan chart sebelumnya jika ada
+            if (window.salesChartInstance) {
+                window.salesChartInstance.destroy();
+            }
+            
+            let labels, data;
+            
+            if (period === 'daily') {
+                labels = sampleData.daily.map(item => item.tanggal);
+                data = {
+                    ayam: sampleData.daily.map(item => item.ayam),
+                    nasi: sampleData.daily.map(item => item.nasi),
+                    kulit: sampleData.daily.map(item => item.kulit),
+                    geprek: sampleData.daily.map(item => item.geprek),
+                    saosBBQ: sampleData.daily.map(item => item.saosBBQ)
+                };
+            } else if (period === 'weekly') {
+                labels = sampleData.weekly.map(item => item.minggu);
+                data = {
+                    ayam: sampleData.weekly.map(item => item.ayam),
+                    nasi: sampleData.weekly.map(item => item.nasi),
+                    kulit: sampleData.weekly.map(item => item.kulit),
+                    geprek: sampleData.weekly.map(item => item.geprek),
+                    saosBBQ: sampleData.weekly.map(item => item.saosBBQ)
+                };
+            } else {
+                labels = sampleData.monthly.map(item => item.bulan);
+                data = {
+                    ayam: sampleData.monthly.map(item => item.ayam),
+                    nasi: sampleData.monthly.map(item => item.nasi),
+                    kulit: sampleData.monthly.map(item => item.kulit),
+                    geprek: sampleData.monthly.map(item => item.geprek),
+                    saosBBQ: sampleData.monthly.map(item => item.saosBBQ)
+                };
+            }
+            
+            window.salesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Ayam',
+                            data: data.ayam,
+                            backgroundColor: 'rgba(255, 107, 53, 0.7)',
+                            borderColor: 'rgb(255, 107, 53)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Nasi',
+                            data: data.nasi,
+                            backgroundColor: 'rgba(247, 197, 159, 0.7)',
+                            borderColor: 'rgb(247, 197, 159)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Kulit',
+                            data: data.kulit,
+                            backgroundColor: 'rgba(44, 62, 80, 0.7)',
+                            borderColor: 'rgb(44, 62, 80)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Geprek',
+                            data: data.geprek,
+                            backgroundColor: 'rgba(232, 74, 45, 0.7)',
+                            borderColor: 'rgb(232, 74, 45)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Saos BBQ',
+                            data: data.saosBBQ,
+                            backgroundColor: 'rgba(248, 249, 250, 0.7)',
+                            borderColor: 'rgb(248, 249, 250)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Jumlah Terjual'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: period === 'daily' ? 'Tanggal' : (period === 'weekly' ? 'Minggu' : 'Bulan')
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Grafik Penjualan ${period === 'daily' ? 'Harian' : (period === 'weekly' ? 'Mingguan' : 'Bulanan')}`,
+                            font: {
+                                size: 16
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
